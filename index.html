@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心靈綠洲 | 極簡科學降壓工具</title>
+    <style>
+        :root {
+            --bg-color: #12181b;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --text-main: #e2e8f0;
+            --text-sub: #94a3b8;
+            --accent-sage: #84a98c;
+            --accent-glow: rgba(132, 169, 140, 0.3);
+            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        /* 導覽頁籤 */
+        nav {
+            position: fixed;
+            top: 20px;
+            display: flex;
+            gap: 12px;
+            background: var(--card-bg);
+            padding: 6px;
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            z-index: 10;
+        }
+
+        nav button {
+            background: transparent;
+            border: none;
+            color: var(--text-sub);
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+        }
+
+        nav button.active {
+            background: var(--accent-sage);
+            color: #12181b;
+            font-weight: 600;
+        }
+
+        /* 主容器 */
+        main {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .tab-content.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 模组 1：生理嘆氣呼吸 */
+        .breathing-container {
+            position: relative;
+            width: 280px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 40px 0;
+        }
+
+        .breath-circle {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-sage) 0%, rgba(132, 169, 140, 0.2) 70%);
+            box-shadow: 0 0 40px var(--accent-glow);
+            transition: transform 0.1s linear;
+        }
+
+        .breath-text {
+            position: relative;
+            z-index: 2;
+            font-size: 1.25rem;
+            letter-spacing: 2px;
+            color: var(--text-main);
+            font-weight: 300;
+        }
+
+        .instruction {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+
+        /* 模組 2：壓力文字銷毀 */
+        .worry-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 140px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            color: var(--text-main);
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        textarea:focus {
+            border-color: var(--accent-sage);
+        }
+
+        .action-btn {
+            background: var(--accent-sage);
+            color: #12181b;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <button class="active" onclick="switchTab('breath')">生理嘆氣呼吸</button>
+        <button onclick="switchTab('worry')">壓力釋放沙盒</button>
+    </nav>
+
+    <main>
+        <!-- 呼吸引導介面 -->
+        <section id="breath-tab" class="tab-content active">
+            <div class="breathing-container">
+                <div class="breath-circle" id="breathCircle"></div>
+                <div class="breath-text" id="breathText">準備...</div>
+            </div>
+            <p class="instruction">
+                史丹佛大學實證：連續兩次快速吸氣填充肺泡，再深長吐氣，<br>能最快降低副交感神經警覺度。
+            </p>
+            <button class="action-btn" style="margin-top: 25px;" id="startBreathBtn" onclick="toggleBreathing()">開始體驗</button>
+        </section>
+
+        <!-- 壓力銷毀介面 -->
+        <section id="worry-tab" class="tab-content">
+            <div class="worry-container">
+                <textarea id="worryInput" placeholder="在此寫下讓你不不安或焦慮的事情...（內容不會被儲存）"></textarea>
+                <button class="action-btn" onclick="dissolveWorry()">粒子化銷毀</button>
+            </div>
+            <p class="instruction" style="margin-top: 15px;">
+                心理學實證：將煩惱寫下並進行物理上的「銷毀」，能提供大腦認知閉合感。
+            </p>
+        </section>
+    </main>
+
+    <canvas id="particleCanvas"></canvas>
+
+    <script>
+        // Tab 切換
+        function switchTab(tabName) {
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(tabName === 'breath') {
+                event.target.classList.add('active');
+                document.getElementById('breath-tab').classList.add('active');
+            } else {
+                event.target.classList.add('active');
+                document.getElementById('worry-tab').classList.add('active');
+            }
+        }
+
+        // --- 生理嘆氣邏輯 ---
+        let isBreathing = false;
+        let breathTimer = null;
+
+        function toggleBreathing() {
+            const btn = document.getElementById('startBreathBtn');
+            if (isBreathing) {
+                isBreathing = false;
+                clearTimeout(breathTimer);
+                document.getElementById('breathText').innerText = '準備...';
+                document.getElementById('breathCircle').style.transform = 'scale(1)';
+                btn.innerText = '開始體驗';
+            } else {
+                isBreathing = true;
+                btn.innerText = '停止體驗';
+                runBreathingCycle();
+            }
+        }
+
+        function runBreathingCycle() {
+            if (!isBreathing) return;
+
+            const circle = document.getElementById('breathCircle');
+            const text = document.getElementById('breathText');
+
+            // 階段 1：第一次吸氣 (1.5s)
+            text.innerText = '深深吸氣...';
+            circle.style.transition = 'transform 1.5s ease-out';
+            circle.style.transform = 'scale(1.8)';
+
+            breathTimer = setTimeout(() => {
+                if (!isBreathing) return;
+                // 階段 2：第二次補吸 (0.8s)
+                text.innerText = '再補吸一口！';
+                circle.style.transition = 'transform 0.8s ease-out';
+                circle.style.transform = 'scale(2.2)';
+
+                breathTimer = setTimeout(() => {
+                    if (!isBreathing) return;
+                    // 階段 3：長吐氣 (4.5s)
+                    text.innerText = '長長吐氣...';
+                    circle.style.transition = 'transform 4.5s ease-in-out';
+                    circle.style.transform = 'scale(1)';
+
+                    breathTimer = setTimeout(() => {
+                        if (isBreathing) runBreathingCycle();
+                    }, 4500);
+                }, 800);
+            }, 1500);
+        }
+
+        // --- 粒子銷毀邏輯 ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function dissolveWorry() {
+            const input = document.getElementById('worryInput');
+            if (!input.value.trim()) return;
+
+            const rect = input.getBoundingClientRect();
+            const count = 120; // 粒子數量
+
+            for (let i = 0; i < count; i++) {
+                particles.push({
+                    x: rect.left + Math.random() * rect.width,
+                    y: rect.top + Math.random() * rect.height,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6 - 2,
+                    alpha: 1,
+                    size: Math.random() * 4 + 2,
+                    color: '#84a98c'
+                });
+            }
+
+            input.value = ''; // 清空輸入欄位
+            if (particles.length <= count) animateParticles();
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.015;
+
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, p.alpha);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (p.alpha <= 0) particles.splice(i, 1);
+            }
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateParticles);
+            }
+        }
+    </script>
+</body>
+</html>
